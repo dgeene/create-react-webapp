@@ -1,0 +1,17 @@
+{
+    "name": "@dgeene/create-react-webapp",
+    "description": "",
+    "version": "0.0.1",
+    "bin": {
+        "create-bose-app": "./bin/create-react-webapp"
+    },
+    "preferGlobal": true,
+    "engines": {
+        "node": ">=8.0"
+    },
+    "dependencies": {
+        "chalk": "2.4.1",
+        "commander": "2.15.1"
+    },
+    "private": true
+}
