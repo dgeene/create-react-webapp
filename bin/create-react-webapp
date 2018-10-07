@@ -13,10 +13,111 @@ let projectDirectory;
 let protocolUsed;
 
 const cloneFromGitURL = (gitURL, projectDirectory) => new Promise((resolve, reject) => {
+
+    spawn('git', [
+        'clone',
+        gitURL,
+        projectDirectory
+    ]).on('close', code => {
+
+        if (code === 0) {
+
+            protocolUsed = gitURL.match(/[^"]+dgeene/ig)[0];
+
+            console.log(`Cloned dgeene/react-boilerplate from ${chalk.green(gitURL)}.\n`);
+
+            return resolve();
+
+        }
+
+        reject(new Error(`Error cloning repo from ${gitURL}`));
+
+    });
 });
 
 const removeLocalGitDirectory = projectDirectory => new Promise((resolve, reject) => {
+
+    spawn('rm', [
+        '-rf',
+        '.git'
+    ], {
+        'cwd': `./${projectDirectory}`,
+        'stdio': 'inherit'
+    }).on('close', code => {
+
+        if (code === 0) return resolve();
+
+        reject(new Error('Error removing upstream git repo directory.'));
+
+    });
 });
 
 const npmInstallPackages = projectDirectory => new Promise((resolve, reject) => {
+
+    const npm = spawn('npm', [
+        'install'
+    ], {
+        'cwd': `./${projectDirectory}`,
+        'stdio': 'inherit'
+    }).on('close', code => {
+
+        if (code === 0) return resolve();
+
+        reject(new Error('Error installing NPM packages.'));
+
+    });
 });
+
+
+
+
+program
+    .version(pkg.version)
+    .arguments('<project-directory>')
+    .usage(`${chalk.green('<project-directory>')}`)
+    .action(directory => {
+        projectDirectory = directory;
+    })
+    .parse(process.argv);
+
+
+if (!projectDirectory) {
+
+    console.error(chalk.red('\n  Please specify the project directory.'));
+
+    program.outputHelp();
+
+    process.exit(1);
+
+} else {
+
+    cloneFromGitURL('git@github.com:dgeene/react-boilerplate.git', projectDirectory)
+        .catch(() => cloneFromGitURL('https://github.com/dgeene/react-boilerplate', projectDirectory))
+        .then(() => removeLocalGitDirectory(projectDirectory))
+        .then(() => {
+
+            console.log(`Creating a new React app in ${chalk.green(resolve(projectDirectory))}.\n`);
+            console.log('Installing packages. This might take a couple minutes.\n');
+
+        })
+        .then(() => npmInstallPackages(projectDirectory))
+        .then(() => {
+
+            console.log(`Success! Created ${projectDirectory} at ${chalk.green(resolve(projectDirectory))}.`);
+            console.log('Inside that directory, you can run several commands:\n');
+
+            console.log(`  ${chalk.blue('npm start')}`);
+            console.log('    Starts the development server.\n');
+
+            console.log('We suggest that you begin by typing:\n');
+
+            console.log(`  ${chalk.blue('cd')} ${projectDirectory}`);
+            console.log(`  ${chalk.blue('npm start')}`);
+
+        })
+        .catch(err => {
+
+            console.error(err);
+
+        });
+}
